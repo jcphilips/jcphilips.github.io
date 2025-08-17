@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CAD Methodology Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is structured as a thematic, single-page guide. It moves from high-level principles to specific workflows, using interactive elements to make the dense, process-oriented text more engaging. A top navigation bar allows for quick jumps, while the body uses cards, an interactive folder diagram, and tabs to segment information logically. This structure was chosen because it transforms a static document into an explorable learning tool, which is more effective for user understanding of processes and rules than a linear text layout. -->
+    <!-- Visualization & Content Choices: Since the report contains no quantitative data, traditional charts are not used. Instead, information is visualized through structure and interaction. Core Principles -> Cards (Goal: Inform, Method: HTML/CSS). File Hierarchy -> Interactive Diagram (Goal: Explore, Method: JS/HTML/CSS to show/hide details on click). Workflows -> Tabbed Interface (Goal: Organize, Method: JS to switch content). Nomenclature -> Interactive Generator (Goal: Interact/Inform, Method: JS form logic). This approach was chosen to make procedural information digestible and engaging without forcing inappropriate data visualizations. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFCFB;
+            color: #2c3e50;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #ecf0f1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        .folder {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .folder:hover, .folder.active {
+            background-color: #ecf0f1;
+        }
+        .folder-icon::before { content: '📁'; margin-right: 8px; }
+        .file-icon::before { content: '📄'; margin-right: 8px; }
+        .tab {
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .content-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 border-b border-gray-200">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">CAD Methodology Guide</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#principles" class="nav-link pb-1">Principles</a>
+                <a href="#hierarchy" class="nav-link pb-1">Hierarchy</a>
+                <a href="#workflow" class="nav-link pb-1">Workflow</a>
+                <a href="#best-practices" class="nav-link pb-1">Best Practices</a>
+                <a href="#advanced-practices" class="nav-link pb-1">Advanced Practices</a>
+                <a href="#nomenclature" class="nav-link pb-1">Nomenclature</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="principles" class="mb-20 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">Core Principles</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">This document outlines the standardized methodologies for all CAD work. The goal is to establish a robust, scalable, and unambiguous system for file management, design structure, and collaboration. Adherence to these principles is critical for ensuring project integrity, manufacturing accuracy, and efficient workflow.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-8 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4">📄 One Component, One File</h3>
+                    <p class="text-gray-600 mb-4">The foundational rule is that a single part file must only contain the geometry for a single, individual component. This ensures every manufacturable part has a unique digital identity, which is essential for accurate Bills of Materials (BOMs).</p>
+                    <details class="bg-gray-50 p-4 rounded-lg">
+                        <summary class="font-semibold cursor-pointer">Case Study: Adding Fasteners</summary>
+                        <div class="mt-2 text-sm text-gray-700">
+                            <p><strong class="text-red-500">Incorrect:</strong> Inserting a clinch nut model into a sheet metal part file. The BOM will be wrong, and the nut won't be ordered.</p>
+                            <p class="mt-2"><strong class="text-green-500">Correct:</strong> The sheet metal part and the clinch nut are separate files. They are only brought together in an Assembly file.</p>
+                        </div>
+                    </details>
+                </div>
+                <div class="card p-8 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4">🔗 Assemblies Define Relationships</h3>
+                    <p class="text-gray-600 mb-4">Assembly files have one purpose: to define the relationships between components using Joints. No part modeling should be done at the top level of an assembly. Components permanently joined before final assembly must be created as a Sub-Assembly.</p>
+                     <details class="bg-gray-50 p-4 rounded-lg">
+                        <summary class="font-semibold cursor-pointer">Case Study: Handle with Inserts</summary>
+                        <div class="mt-2 text-sm text-gray-700">
+                            <p><strong class="text-red-500">Incorrect:</strong> Adding a handle, two inserts, and three joints to the main assembly. This creates unnecessary clutter.</p>
+                            <p class="mt-2"><strong class="text-green-500">Correct:</strong> Create a `Handle-Sub-Assembly.f3d` containing the handle and its inserts. Insert this single sub-assembly into the main product, simplifying the design.</p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section id="hierarchy" class="mb-20 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">Project & File Hierarchy</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">A strict and logical folder structure is essential for locating files and understanding project architecture. Our hierarchy is divided into the central library and individual project folders.</p>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="card p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Interactive Folder Structure</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg text-sm font-mono">
+                        <div class="folder folder-item" data-target="info-library"><span class="folder-icon">[Library]</span></div>
+                        <div class="pl-4">
+                            <div class="folder folder-item" data-target="info-fasteners"><span class="folder-icon">/Fasteners/</span></div>
+                            <div class="folder folder-item" data-target="info-electronics"><span class="folder-icon">/Electronics/</span></div>
+                        </div>
+                        <div class="folder folder-item" data-target="info-project"><span class="folder-icon">/Project-Name/</span></div>
+                        <div class="pl-4">
+                            <div class="folder folder-item" data-target="info-project-assets"><span class="folder-icon">/Assets/</span></div>
+                            <div class="folder folder-item" data-target="info-revision"><span class="folder-icon">/Revision-v1/</span></div>
+                            <div class="pl-8">
+                                <div class="folder folder-item" data-target="info-subassemblies"><span class="folder-icon">/Sub-Assemblies/</span></div>
+                                <div class="folder folder-item" data-target="info-manufacturing"><span class="folder-icon">/Manufacturing/</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="folder-info-display" class="bg-white p-8 rounded-xl border border-gray-200 sticky top-28">
+                    <h4 id="info-title" class="text-2xl font-bold mb-3">Click a folder to learn more</h4>
+                    <p id="info-description" class="text-gray-600">Select an item from the interactive folder structure to see its purpose and a relevant case study.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="workflow" class="mb-20 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">Core Workflows</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">These workflows define the practical application of our design principles, ensuring a consistent process from initial design to final manufacturing.</p>
+            <div class="card rounded-xl shadow-md overflow-hidden">
+                <div class="flex border-b border-gray-200 bg-gray-50">
+                    <button class="tab flex-1 p-4 font-semibold text-gray-700 active" data-tab="tab-assembly">Assembly Workflow</button>
+                    <button class="tab flex-1 p-4 font-semibold text-gray-700" data-tab="tab-manufacturing">Manufacturing Workflow</button>
+                </div>
+                <div id="tab-content" class="p-8">
+                    <div id="tab-assembly" class="tab-pane active content-fade-in">
+                        <h3 class="text-2xl font-bold mb-4">Creating Sub-Assemblies</h3>
+                        <p class="text-gray-600 mb-4">When a group of components are permanently joined together before the final assembly (e.g. with fasteners, welds, or adhesives), they must be created as a Sub-Assembly. This sub-assembly is then treated as a single "part" in the next level up, simplifying the main design and ensuring an accurate BOM.</p>
+                    </div>
+                    <div id="tab-manufacturing" class="tab-pane hidden content-fade-in">
+                        <h3 class="text-2xl font-bold mb-4">Using Derived Designs for Manufacturing</h3>
+                        <p class="text-gray-600 mb-4">The `Manufacturing` folder is a critical part of the release process. It ensures that the "design" models remain clean and separate from the "fabrication" models. Drawings should never be created from the primary design assembly. Instead, a Derived Part or Sub-Assembly must be created and placed in the `Manufacturing` folder.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="best-practices" class="mb-20 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">In-Model Best Practices</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">A clean file is an understandable file. These practices must be adhered to within every design file to ensure clarity, ease of editing, and long-term maintainability.</p>
+            <div class="space-y-6">
+                <div class="card p-6 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-bold">1. Name Everything</h3>
+                    <p class="text-gray-600">All significant features in the browser tree and timeline must be given descriptive names. Rename `Sketch1` to `Profile-Main-Body` and `Body1` to `Lid`.</p>
+                </div>
+                <div class="card p-6 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-bold">2. Group Timeline Features</h3>
+                    <p class="text-gray-600">Use the "Create Group" command to group related features in the timeline. Name the group "M4 Mounting Hole Feature Group." This makes the design history dramatically easier to navigate and debug.</p>
+                </div>
+                <div class="card p-6 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-bold">3. Use Part Numbers</h3>
+                    <p class="text-gray-600">All custom components should ideally be given a unique part number at the root level. This number is the primary key for tracking a component through its entire lifecycle, from BOM creation to manufacturing and inventory.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="advanced-practices" class="mb-20 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">Advanced Practices for Design & Manufacturing</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">Beyond basic modeling, these advanced techniques are crucial for creating robust, editable designs and clear, unambiguous manufacturing documentation.</p>
+            
+            <div class="space-y-8">
+                <div class="card p-8 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4">⚙️ Case Study: Parametric Design for COTS Parts</h3>
+                    <p class="text-gray-600 mb-4"><strong>Scenario:</strong> A designer frequently uses pogo pin connectors, but each use case requires a different pin count and height. Modeling a new part for each variation is inefficient and clutters the component library.</p>
+                    <p class="text-gray-600 mb-4"><strong>Solution:</strong> A single, intelligent COTS part is created. In the Parameters dialog (`Modify > Change Parameters`), the designer defines key dimensions as "User Parameters."</p>
+                    <div class="bg-gray-50 p-4 rounded-lg my-4">
+                        <p class="font-mono text-sm"><strong class="text-blue-600">pins_amount</strong> = 4</p>
+                        <p class="font-mono text-sm"><strong class="text-blue-600">total_height</strong> = 10mm</p>
+                    </div>
+                    <p class="text-gray-600">The model's features are then driven by these parameters. The number of pins is controlled by the `pins_amount` parameter in a "Rectangular Pattern" feature, and the pin and holder bodies are controlled by the `total_height` parameter. Now, to create a 6-pin, 12mm tall version, the designer simply edits these two values. This parametric approach is ideal for creating configurable library parts, saving hours of repetitive modeling.</p>
+                </div>
+
+                <div class="card p-8 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4">🏷️ In-Model Documentation & Views</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600">
+                        <li><strong>Named Sketches & Bodies:</strong> Essential for understanding a model's structure without digging through the timeline.</li>
+                        <li><strong>Part Numbers:</strong> Assign part numbers from your procurement system to the component's properties for seamless BOM integration.</li>
+                        <li><strong>Named Views (UPPERCASE):</strong> Create specific, named camera angles (e.g. `ISOMETRIC_MAIN`, `FLAT_PATTERN_VIEW`). Using these in drawings ensures all views are consistent, repeatable, and professional.</li>
+                        <li><strong>Named Storyboards:</strong> In the Animation workspace, create and name storyboards for different assembly or disassembly sequences. These are essential for generating clear exploded views in your drawings.</li>
+                    </ul>
+                </div>
+
+                <div class="card p-8 rounded-xl shadow-md bg-blue-50 border-blue-200">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-800">Case Study: The Multi-Stage Fabrication Process</h3>
+                    <p class="text-gray-700 mb-4"><strong>Scenario:</strong> A complex sheet metal enclosure must be outsourced for fabrication. The process involves multiple distinct stages: laser cutting, bending, welding gussets, and installing two different sizes of clinch nuts. Communicating this sequence clearly is critical to avoid costly errors.</p>
+                    <p class="text-gray-700 mb-4"><strong>The Solution - A Two-Drawing Approach:</strong></p>
+                    <div class="space-y-3 text-sm">
+                        <p><strong>1. The Part Drawing (`...PRT...`):</strong> The designer first creates a drawing from a derived model of the main sheet metal part *only*. This drawing contains just the information for the initial fabrication steps: the flat pattern for laser cutting and the bend table/folded views for the press brake operator. It intentionally omits fasteners and gussets to avoid confusion.</p>
+                        <p><strong>2. The Sub-Assembly Drawing (`...SUB...`):</strong> A second drawing is created from the sub-assembly which includes the bent part, the gussets, and the clinch nuts. This drawing communicates the final assembly stages:</p>
+                        <ul class="list-disc list-inside pl-4 mt-2 text-gray-600">
+                            <li><strong>Named Storyboards</strong> created in the Animation workspace are used to generate clear Exploded Views. These views show exactly how the M3 and M4 clinch nuts are to be installed.</li>
+                            <li>To clearly show clinch nuts on angled or obscured faces, specific **Named Views** like `INSTALL_NUTS_REAR_VIEW` are created. These custom camera angles are impossible to achieve with standard drawing views and are essential for unambiguous instructions.</li>
+                            <li>To communicate the welding step, a view is created where the clinch nuts are **suppressed** (hidden). This focuses the welder's attention only on the gusset locations and the corresponding weld symbols.</li>
+                        </ul>
+                    </div>
+                    <p class="mt-4 font-semibold text-blue-700">This separation of drawings, enabled by deriving files and using advanced features like named storyboards and custom named views, is the only way to communicate a complex manufacturing sequence without ambiguity. It guides the fabricator through the process step-by-step, preventing errors and ensuring the final part is built exactly to specification.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="nomenclature" class="scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center mb-4">File Naming Nomenclature</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">A standardized file naming convention is critical for organization and clarity. Use the tools below to build valid names for project-specific files and COTS components.</p>
+            <div class="space-y-10">
+                <div class="card p-8 rounded-xl shadow-md max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Project-Specific File Generator</h3>
+                    <p class="text-center text-gray-500 text-sm mb-4">Format: `ProjectID-(SubProject)-Type-Description`</p>
+                    <div class="grid sm:grid-cols-4 gap-4 mb-6 items-end">
+                        <div>
+                            <label for="projectID" class="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
+                            <input type="text" id="projectID" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. 01">
+                        </div>
+                        <div>
+                            <label for="subProject" class="block text-sm font-medium text-gray-700 mb-1">Sub-Project</label>
+                            <input type="text" id="subProject" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. CAR">
+                        </div>
+                        <div>
+                            <label for="fileType" class="block text-sm font-medium text-gray-700 mb-1">File Type</label>
+                            <select id="fileType" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                                <option value="ASM">ASM</option>
+                                <option value="SUB">SUB</option>
+                                <option value="PRT">PRT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input type="text" id="description" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. Main Assembly">
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-gray-600 text-center">Generated Filename:</p>
+                        <div class="flex items-center justify-center mt-1">
+                            <p id="generated-name" class="text-lg font-mono font-semibold text-gray-800 break-all">...</p>
+                            <button id="copy-btn" class="ml-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors" title="Copy Filename">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-8 rounded-xl shadow-md max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-bold mb-6 text-center">COTS / Library Component Generator</h3>
+                    <p class="text-center text-gray-500 text-sm mb-4">Format: `Type-Name_or_Description-Specification`. Units are in mm unless specified (e.g. `L1.5in`).</p>
+                    <div class="grid sm:grid-cols-3 gap-4 mb-6 items-end">
+                        <div>
+                            <label for="cotsType" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                            <select id="cotsType" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                                <option value="Connector">Connector</option>
+                                <option value="Fastener">Fastener</option>
+                                <option value="Standoff">Standoff</option>
+                                <option value="Bearing">Bearing</option>
+                                <option value="Insert">Insert</option>
+                                <option value="SBC">SBC</option>
+                                <option value="Sensor">Sensor</option>
+                                <option value="Actuator">Actuator</option>
+                                <option value="Module">Module</option>
+                                <option value="Misc">Misc</option>
+                                <option value="other">Other...</option>
+                            </select>
+                        </div>
+                        <div id="cotsTypeOtherWrapper" class="hidden">
+                            <label for="cotsTypeOther" class="block text-sm font-medium text-gray-700 mb-1">Custom Type</label>
+                            <input type="text" id="cotsTypeOther" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="Enter custom type">
+                        </div>
+                        <div>
+                            <label for="cotsName" class="block text-sm font-medium text-gray-700 mb-1">Name/Description</label>
+                            <input type="text" id="cotsName" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. JST XHP">
+                        </div>
+                        <div>
+                            <label for="cotsSpec" class="block text-sm font-medium text-gray-700 mb-1">Specification</label>
+                            <input type="text" id="cotsSpec" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. 4P">
+                        </div>
+                    </div>
+                     <div class="text-sm text-gray-500 bg-gray-50 p-3 rounded-md mb-6">
+                        <strong>Specification Legend:</strong> 
+                        <span class="font-mono bg-gray-200 px-1 rounded">P</span>=Pins, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">p</span>=pitch, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">H</span>=Height, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">W</span>=Width, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">L</span>=Length, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">D</span>=Diameter, 
+                        <span class="font-mono bg-gray-200 px-1 rounded">OD</span>=Outer Dia., 
+                        <span class="font-mono bg-gray-200 px-1 rounded">ID</span>=Inner Dia.
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-gray-600 text-center">Generated Filename:</p>
+                        <div class="flex items-center justify-center mt-1">
+                            <p id="cots-generated-name" class="text-lg font-mono font-semibold text-gray-800 break-all">...</p>
+                            <button id="cots-copy-btn" class="ml-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors" title="Copy to clipboard">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 mt-20">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-600">
+            <p>Adhering to these methodologies creates a structured, scalable, and professional CAD environment, improving efficiency and reducing errors.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const folderItems = document.querySelectorAll('.folder-item');
+            const infoTitle = document.getElementById('info-title');
+            const infoDescription = document.getElementById('info-description');
+
+            const folderInfo = {
+                'info-library': {
+                    title: '[Library]',
+                    description: 'All commercial-off-the-shelf (COTS) components, standard fasteners, and reusable library parts must be stored in this single, root-level project folder. This folder acts as the "single source of truth."'
+                },
+                'info-fasteners': {
+                    title: '/Fasteners/',
+                    description: 'Contains all standard fasteners like screws, nuts, washers, and inserts. Organized into subfolders for clarity.'
+                },
+                'info-electronics': {
+                    title: '/Electronics/',
+                    description: 'Contains all electronic components, such as connectors, modules, and single-board computers (SBCs).'
+                },
+                'info-project': {
+                    title: '/Project-Name/',
+                    description: 'Each project gets its own dedicated folder at the root level to house all related files and revisions.'
+                },
+                'info-project-assets': {
+                    title: '/Assets/ (Project Level)',
+                    description: 'Contains files common to this specific project across all revisions (e.g. logos, core design files, reference documents).'
+                },
+                'info-revision': {
+                    title: '/Revision-vX/',
+                    description: 'The top-level folder for a specific design revision. All work for that version lives here.'
+                },
+                'info-subassemblies': {
+                    title: '/Sub-Assemblies/',
+                    description: 'Contains all the assembly files created for this project revision.'
+                },
+                'info-manufacturing': {
+                    title: '/Manufacturing/',
+                    description: 'Contains files specifically prepared for fabrication, such as derived models for drawings.'
+                }
+            };
+
+            folderItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    folderItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    const targetId = item.dataset.target;
+                    if (folderInfo[targetId]) {
+                        infoTitle.textContent = folderInfo[targetId].title;
+                        infoDescription.textContent = folderInfo[targetId].description;
+                    }
+                });
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    tabPanes.forEach(pane => {
+                        if (pane.id === tab.dataset.tab) {
+                            pane.classList.remove('hidden');
+                            pane.classList.add('active');
+                        } else {
+                            pane.classList.add('hidden');
+                            pane.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            const projectIDInput = document.getElementById('projectID');
+            const subProjectInput = document.getElementById('subProject');
+            const fileTypeSelect = document.getElementById('fileType');
+            const descriptionInput = document.getElementById('description');
+            const generatedNameP = document.getElementById('generated-name');
+
+            function generateName() {
+                const projectID = projectIDInput.value.trim();
+                const subProject = subProjectInput.value.trim();
+                const fileType = fileTypeSelect.value;
+                const description = descriptionInput.value.trim().replace(/ /g, '_');
+                
+                let filename = '...';
+
+                if (projectID && description) {
+                    let nameParts = [projectID];
+                    if (subProject) {
+                        nameParts.push(subProject);
+                    }
+                    nameParts.push(fileType);
+                    nameParts.push(description);
+                    filename = nameParts.join('-');
+                }
+                
+                generatedNameP.textContent = filename;
+            }
+
+            [projectIDInput, subProjectInput, fileTypeSelect, descriptionInput].forEach(el => {
+                el.addEventListener('input', generateName);
+            });
+            
+            function setupCopyButton(buttonId, textElementId) {
+                const copyButton = document.getElementById(buttonId);
+                const textElement = document.getElementById(textElementId);
+                const originalIcon = copyButton.innerHTML;
+
+                copyButton.addEventListener('click', () => {
+                    const textToCopy = textElement.textContent;
+                    if (textToCopy && textToCopy !== '...') {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = textToCopy;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            copyButton.innerHTML = '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                            setTimeout(() => {
+                                copyButton.innerHTML = originalIcon;
+                            }, 2000);
+                        } catch (err) {
+                            console.error('Failed to copy text: ', err);
+                        }
+                        document.body.removeChild(textArea);
+                    }
+                });
+            }
+
+            setupCopyButton('copy-btn', 'generated-name');
+            generateName();
+
+            const cotsTypeSelect = document.getElementById('cotsType');
+            const cotsTypeOtherWrapper = document.getElementById('cotsTypeOtherWrapper');
+            const cotsTypeOtherInput = document.getElementById('cotsTypeOther');
+            const cotsNameInput = document.getElementById('cotsName');
+            const cotsSpecInput = document.getElementById('cotsSpec');
+            const cotsGeneratedNameP = document.getElementById('cots-generated-name');
+
+            function generateCotsName() {
+                let type = cotsTypeSelect.value;
+                if (type === 'other') {
+                    type = cotsTypeOtherInput.value.trim().replace(/ /g, '_');
+                } else {
+                    type = type.trim().replace(/ /g, '_');
+                }
+
+                const name = cotsNameInput.value.trim().replace(/ /g, '_');
+                const spec = cotsSpecInput.value.trim().replace(/ /g, '_');
+
+                if (!type || !name || !spec) {
+                    cotsGeneratedNameP.textContent = '...';
+                    return;
+                }
+                
+                cotsGeneratedNameP.textContent = `${type}-${name}-${spec}`;
+            }
+
+            cotsTypeSelect.addEventListener('change', () => {
+                if (cotsTypeSelect.value === 'other') {
+                    cotsTypeOtherWrapper.classList.remove('hidden');
+                    cotsTypeOtherInput.focus();
+                } else {
+                    cotsTypeOtherWrapper.classList.add('hidden');
+                }
+                generateCotsName();
+            });
+
+            [cotsTypeOtherInput, cotsNameInput, cotsSpecInput].forEach(el => {
+                el.addEventListener('input', generateCotsName);
+            });
+            
+            setupCopyButton('cots-copy-btn', 'cots-generated-name');
+            generateCotsName();
+
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 120) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
